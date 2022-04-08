@@ -1,0 +1,5 @@
+hydra:
+  run:
+    dir: ../outputs/${now:%Y-%m-%d-%H-%M-%S}
+model:
+  
