@@ -1,3 +1,4 @@
+from re import S
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm, trange
 from utils.save_load import save, load
@@ -59,7 +60,10 @@ def main(cfg):
     # load ckpt
     if cfg.train.ckpt is not None:
         load(model, optimizer, scheduler, cfg.train.ckpt)
-
+    logger.add_video('gt', torch.from_numpy(
+        gt).permute((0, 3, 1, 2)).unsqueeze(0), None, fps)
+    logger.add_video('trainset', torch.from_numpy(
+        gt[::cfg.train.train_split, ...]).permute((0, 3, 1, 2)).unsqueeze(0), None, int(fps/cfg.train.train_split))
     # train
     for e in (bar := tqdm(range(cfg.train.num_epoches))):
         model.train()
@@ -98,7 +102,7 @@ def main(cfg):
         reconPSNR /= recon.shape[0]
         logger.add_scalar('val/psnr', reconPSNR, e)
         scheduler.step()
-
+        save(model,optimizer,scheduler,f'ckpts/epoch{e}.pt')
 
 if __name__ == '__main__':
     main()
