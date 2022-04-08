@@ -16,8 +16,9 @@ class MLP(nn.Module):
                 nextActi = bodyActi
             if i in skipLst:
                 lastNumOutput += numInput
-            net.append(nn.Linear(lastNumOutput, nextNumOutput))
-            net.append(getattr(nn, nextActi)())
+            net.append(nn.Sequential(nn.Linear(lastNumOutput,
+                       nextNumOutput), getattr(nn, nextActi)()))
+            lastNumOutput = nextNumOutput
         self.net = nn.ModuleList(net)
         self.skipLst = skipLst
 

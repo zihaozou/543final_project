@@ -41,4 +41,5 @@ def gifDecodeArr(path, split, *args):
     optiFlowLst.append(np.zeros_like(flow))
     optiFlows = np.stack(optiFlowLst, axis=0)
     opTrain = optiFlows.reshape((-1, 2))
-    return XFull, yFull, Xtrain, yTrain, opTrain, cap.get(5)
+    frames = frames.astype(float)/255.
+    return frames, XFull, yFull, Xtrain, yTrain, opTrain, cap.get(5), frames.shape[0], frames.shape[1], frames.shape[2]

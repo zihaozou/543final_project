@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import grad
+from torch.nn.functional import mse_loss
 
 
 class GIFNERF(nn.Module):
@@ -12,6 +13,23 @@ class GIFNERF(nn.Module):
 
     def forward(self, X):
         return (self.mlp(self.ffm(X)))
+
+    @staticmethod
+    def trainingStep(model, batch, device):
+        X, y = batch
+        X = X.to(device)
+        y = y.to(device)
+        pred = model(X)
+        loss = mse_loss(pred, y)
+        return loss
+
+    @staticmethod
+    def valStep(model, batch, device):
+        X, y = batch
+        X = X.to(device)
+        y = y.to(device)
+        pred = model(X).detach().cpu()
+        return pred
 
 
 class GIFNERFJacob(nn.Module):
