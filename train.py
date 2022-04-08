@@ -1,4 +1,3 @@
-from re import S
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm, trange
 from utils.save_load import save, load
@@ -102,7 +101,7 @@ def main(cfg):
         reconPSNR /= recon.shape[0]
         logger.add_scalar('val/psnr', reconPSNR, e)
         scheduler.step()
-        save(model,optimizer,scheduler,f'ckpts/epoch{e}.pt')
+        save(model, optimizer, scheduler, f'ckpts/epoch{e}.pt')
 
 if __name__ == '__main__':
     main()
