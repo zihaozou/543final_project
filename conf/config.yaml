@@ -8,21 +8,21 @@ model:
     num_input: 3
   mlp:
     num_inputs: 60
-    num_outputs: 3
+    num_outputs: 4
     num_neurons: 256
     depth: 16
     skip_list: [2,5,8,11,14]
     body_acti: LeakyReLU
-    last_acti: Sigmoid
+    last_acti: Null
   nerf:
-    type: GIFNERF
+    type: GIFNERFJacob
 
 gif:
   data_path: data/test.gif
   ofargs: [0.5, 3, 15, 3, 5, 1.2, 0]
 train:
   train_split: 3
-  batch_size: 3000
+  batch_size: 8000
   GPUIndex: [0]
   optim:
     type: Adam
@@ -32,6 +32,6 @@ train:
   lr_sche:
     type: ExponentialLR
     kwargs:
-      gamma: 0.99
+      gamma: 0.999
   ckpt: Null
   num_epoches: 500

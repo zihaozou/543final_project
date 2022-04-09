@@ -29,7 +29,7 @@ def main(cfg):
     gt, XFull, yFull, XTrain, yTrain, opTrain, fps, numFrames, H, W = gifDecodeArr(
         join(get_original_cwd(), cfg.gif.data_path), cfg.train.train_split, *cfg.gif.ofargs)
     trainLoader = DataLoader(gifDataset(
-        XTrain, yTrain, None), batch_size=cfg.train.batch_size, shuffle=True, num_workers=8, pin_memory=True)
+        XTrain, yTrain, opTrain), batch_size=cfg.train.batch_size, shuffle=True, num_workers=8, pin_memory=True)
     valLoader = DataLoader(gifDataset(
         XFull, yFull, None), batch_size=cfg.train.batch_size, shuffle=False, num_workers=8, pin_memory=True)
 

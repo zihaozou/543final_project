@@ -16,8 +16,11 @@ class MLP(nn.Module):
                 nextActi = bodyActi
             if i in skipLst:
                 lastNumOutput += numInput
-            net.append(nn.Sequential(nn.Linear(lastNumOutput,
-                       nextNumOutput), getattr(nn, nextActi)()))
+            if nextActi is not None:
+                net.append(nn.Sequential(nn.Linear(lastNumOutput,
+                        nextNumOutput), getattr(nn, nextActi)()))
+            else:
+                net.append(nn.Linear(lastNumOutput,nextNumOutput))
             lastNumOutput = nextNumOutput
         self.net = nn.ModuleList(net)
         self.skipLst = skipLst

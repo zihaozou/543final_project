@@ -24,7 +24,7 @@ def gifDecodeArr(path, split, *args):
     trainFrameList = range(0, frames.shape[0], split)
     Xtrain = torch.from_numpy(np.asarray(list(product(trainFrameList, range(
         frames.shape[1]), range(frames.shape[2]))))).float()
-    Xtrain[:, 0] = Xtrain[:, 0]/float(len(trainFrameList))
+    Xtrain[:, 0] = Xtrain[:, 0]/float(frames.shape[0])
     Xtrain[:, 1] = Xtrain[:, 1]/float(frames.shape[1])
     Xtrain[:, 2] = Xtrain[:, 2]/float(frames.shape[2])
     yTrainImage = frames[::split, ...]
