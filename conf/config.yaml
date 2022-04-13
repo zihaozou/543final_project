@@ -8,7 +8,7 @@ model:
     num_input: 3
   mlp:
     num_inputs: 60
-    num_outputs: 1
+    num_outputs: 3
     num_neurons: 256
     depth: 16
     skip_list: [2,5,8,11,14]
