@@ -24,11 +24,11 @@ class BasicFFM(nn.Module):
         self.register_buffer('ffmModule', ffm)
 
     def forward(self, x):
+        # (3,) ==> (60,)
         repeatX = x.repeat(1, self.L*2)
         repeatX = repeatX*self.ffmModule
-        ret = repeatX.clone()
-        ret[:, ::4] = torch.sin(repeatX[:, ::4])
-        ret[:, 1::4] = torch.sin(repeatX[:, 1::4])
-        ret[:, 2::4] = torch.cos(repeatX[:, 2::4])
-        ret[:, 3::4] = torch.cos(repeatX[:, 3::4])
+        repeatX[:, ::4] = torch.sin(repeatX[:, ::4])
+        repeatX[:, 1::4] = torch.sin(repeatX[:, 1::4])
+        repeatX[:, 2::4] = torch.cos(repeatX[:, 2::4])
+        repeatX[:, 3::4] = torch.cos(repeatX[:, 3::4])
         return repeatX
