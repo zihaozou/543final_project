@@ -8,14 +8,14 @@ model:
     num_input: 3
   mlp:
     num_inputs: 60
-    num_outputs: 4
+    num_outputs: 1
     num_neurons: 256
     depth: 16
     skip_list: [2,5,8,11,14]
     body_acti: LeakyReLU
     last_acti: Null
   nerf:
-    type: GIFNERFJacob
+    type: GIFNERF
 
 gif:
   data_path: data/test.gif
@@ -34,4 +34,4 @@ train:
     kwargs:
       gamma: 0.999
   ckpt: Null
-  num_epoches: 500
+  num_epoches: 300
