@@ -1,0 +1,37 @@
+hydra:
+  run:
+    dir: ../outputsexpL/${now:%Y-%m-%d-%H-%M-%S}
+model:
+  ffm:
+    mode: linear
+    L: [5,10,15,20]
+    num_input: 3
+  mlp:
+    num_inputs: [30,60,90,120]
+    num_outputs: 3
+    num_neurons: 256
+    depth: 16
+    skip_list: [2,5,8,11,14]
+    body_acti: LeakyReLU
+    last_acti: Null
+  nerf:
+    type: GIFNERF
+
+gif:
+  data_path: data/test.gif
+  ofargs: [0.5, 3, 15, 3, 5, 1.2, 0]
+train:
+  train_split: 3
+  batch_size: 8000
+  GPUIndex: [0]
+  optim:
+    type: Adam
+    kwargs:
+      lr: 1e-3
+      weight_decay: 1e-8
+  lr_sche:
+    type: ExponentialLR
+    kwargs:
+      gamma: 0.999
+  ckpt: Null
+  num_epoches: 300

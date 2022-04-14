@@ -29,9 +29,9 @@ def main(cfg):
     gt, XFull, yFull, XTrain, yTrain, opTrain, fps, numFrames, H, W = gifDecodeArr(
         join(get_original_cwd(), *cfg.gif.data_path.split('/')), cfg.train.train_split, *cfg.gif.ofargs)
     trainLoader = DataLoader(gifDataset(
-        XTrain, yTrain, None), batch_size=cfg.train.batch_size, shuffle=True, num_workers=8, pin_memory=True)
+        XTrain, yTrain, None), batch_size=cfg.train.batch_size, shuffle=True, num_workers=2, pin_memory=True)
     valLoader = DataLoader(gifDataset(
-        XFull, yFull, None), batch_size=cfg.train.batch_size, shuffle=False, num_workers=8, pin_memory=True)
+        XFull, yFull, None), batch_size=cfg.train.batch_size, shuffle=False, num_workers=2, pin_memory=True)
 
     # Load model
     ffm = BasicFFM(cfg.model.ffm.mode, cfg.model.ffm.L,
@@ -64,7 +64,8 @@ def main(cfg):
     logger.add_video('trainset', torch.from_numpy(
         gt[::cfg.train.train_split, ...]).permute((0, 3, 1, 2)).unsqueeze(0), None, int(fps/cfg.train.train_split))
     # train
-    for e in (bar := tqdm(range(cfg.train.num_epoches))):
+    bar = tqdm(range(cfg.train.num_epoches))
+    for e in bar:
         model.train()
         epochLoss = 0
         for b, batch in enumerate(trainLoader):
