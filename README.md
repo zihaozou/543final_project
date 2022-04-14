@@ -13,4 +13,8 @@ CPU:
 
     conda install tqdm scikit-image -y
     pip install moviepy hydra-core opencv-python tensorboard --upgrade
+    
 
+# 注意事项：
+    如需运行predict.py，需要现在config文件下的predict_config.yaml改动model.path。把model.path改成你训练完后的模型的路径。
+    
