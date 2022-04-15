@@ -30,16 +30,6 @@ def gifDecodeArr(path, split, *args):
     yTrainImage = frames[::split, ...]
     yTrain = torch.from_numpy(yTrainImage.reshape(
         (-1, yTrainImage.shape[-1]))).float()/255.
-    optiFlowLst = []
-    prev = cv2.cvtColor(yTrainImage[0, ...], cv2.COLOR_RGB2GRAY)
-    for i in range(1, yTrainImage.shape[0]):
-        next = cv2.cvtColor(yTrainImage[i, ...], cv2.COLOR_RGB2GRAY)
-        flow = cv2.calcOpticalFlowFarneback(
-            prev, next, None, *args)
-        optiFlowLst.append(flow)
-        prev = next
-    optiFlowLst.append(np.zeros_like(flow))
-    optiFlows = np.stack(optiFlowLst, axis=0)
-    opTrain = optiFlows.reshape((-1, 2))
     frames = frames.astype(float)/255.
-    return frames, XFull, yFull, Xtrain, yTrain, opTrain, cap.get(5), frames.shape[0], frames.shape[1], frames.shape[2]
+    yTrainImage = frames[::split, ...]
+    return frames, yTrainImage, XFull, yFull, Xtrain, yTrain, cap.get(5), frames.shape[0], frames.shape[1], frames.shape[2]

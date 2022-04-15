@@ -2,7 +2,10 @@ import torch
 import torch.nn as nn
 from torch.autograd import grad
 from torch.autograd.functional import jacobian
-from torch.nn.functional import mse_loss, sigmoid
+from torch.nn.functional import mse_loss, sigmoid, l1_loss, pad
+import model.softsplat as fw
+from torch.autograd import grad
+from math import ceil, log, pow
 
 
 class GIFNERF(nn.Module):
@@ -25,48 +28,52 @@ class GIFNERF(nn.Module):
         return loss
 
     @staticmethod
-    def valStep(model, batch, device):
+    def interframeTrainStep(model, flowComp, backWrap, batch, co, alpha, bs, device):
         X, y = batch
-        X = X.to(device)
         y = y.to(device)
-        pred = model(X).detach().cpu()
-        return pred
+        XChunk = torch.split(X, bs)
 
+        with torch.no_grad():
+            predChunk = []
+            for XPiece in XChunk:
+                XPiece = XPiece.to(device)
+                predPiece = model(XPiece)
+                predChunk.append(predPiece)
+            pred = torch.cat(predChunk, dim=0)
+            del predChunk, XChunk
+            pred = pred.view(
+                (1, y.shape[2], y.shape[3], 3)).permute((0, 3, 1, 2))
 
-class GIFNERFJacob(nn.Module):
-    def __init__(self, ffm, mlp) -> None:
-        super(GIFNERFJacob, self).__init__()
-        self.ffm = ffm
-        self.mlp = mlp
+            flowOut = flowComp(
+                pad(y.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(pow(2, ceil(log(y.shape[2], 2)))-y.shape[2]), 0, int(pow(2, ceil(log(y.shape[2], 2)))-y.shape[2])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
+            F_0_1 = flowOut[:, :2, :, :]
+            F_1_0 = flowOut[:, 2:, :, :]
+            F_t_0 = -(1-co)*co * F_0_1 + co**2 * F_1_0
+            F_t_1 = (1-co)**2 * F_0_1 - co*(1-co) * F_1_0
+            tenMetric1 = l1_loss(input=y[0, ...].unsqueeze(0), target=backWrap(
+                y[1, ...].unsqueeze(0), F_0_1), reduction='none').mean(1, True)
+            tenMetric2 = l1_loss(input=y[1, ...].unsqueeze(0), target=backWrap(
+                y[0, ...].unsqueeze(0), F_1_0), reduction='none').mean(1, True)
+        pred.requires_grad_()
+        recon1 = fw.softsplat(
+            pred, tenFlow=F_t_1, tenMetric=(alpha * tenMetric1), strMode='soft')
 
-    def forward(self, X):
+        midLoss1 = mse_loss(recon1, y[1, ...].unsqueeze(0))
+        midGrad1 = grad(midLoss1, pred, torch.tensor(
+            1, dtype=torch.float32, device=device))[0]
 
-        output = self.mlp(self.ffm(X))
-        RGB = sigmoid(output[:, :3])
-        if self.training:
-            midValue = output[:, 3].sum()
-            # torch.autograd.set_detect_anomaly(True)
-            optics = grad(midValue, X,
-                          None, retain_graph=True)[0][:, 1:]
-            return torch.cat((RGB, optics), dim=1)
-        else:
-            return RGB
+        recon2 = fw.softsplat(
+            pred, tenFlow=F_t_0, tenMetric=(-alpha * tenMetric2), strMode='soft')
+
+        midLoss2 = mse_loss(recon2, y[1, ...].unsqueeze(0))
+        midGrad2 = grad(midLoss2, pred, torch.tensor(
+            1, dtype=torch.float32, device=device))[0]
+        return midGrad1, midGrad2
 
     @staticmethod
-    def trainingStep(model, batch, device):
-        X, y, op = batch
-        X = X.to(device)
-        y = y.to(device)
-        op = op.to(device)
-        X.requires_grad = True
-        pred = model(X)
-        loss = mse_loss(torch.cat((y, op), dim=1), pred)
-        return loss
-
-    @staticmethod
     def valStep(model, batch, device):
-        X, y = batch
+        X = batch
         X = X.to(device)
-        y = y.to(device)
+        #y = y.to(device)
         pred = model(X).detach().cpu()
         return pred
