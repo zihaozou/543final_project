@@ -4,10 +4,10 @@ hydra:
 model:
   ffm:
     mode: linear
-    L: 10
+    L: 15
     num_input: 3
   mlp:
-    num_inputs: 60
+    num_inputs: 90
     num_outputs: 3
     num_neurons: 256
     depth: 16
@@ -22,8 +22,8 @@ gif:
   ofargs: [0.5, 3, 15, 3, 5, 1.2, 0]
 train:
   train_split: 3
-  batch_size: 8000
-  GPUIndex: [0]
+  batch_size: 100000
+  GPUIndex: [2]
   optim:
     type: Adam
     kwargs:

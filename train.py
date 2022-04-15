@@ -102,6 +102,6 @@ def main(cfg):
         logger.add_scalar('val/psnr', reconPSNR, e)
         scheduler.step()
         save(model, optimizer, scheduler, f'ckpts/epoch{e}.pt')
-
+        
 if __name__ == '__main__':
     main()
