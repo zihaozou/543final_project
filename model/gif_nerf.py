@@ -45,7 +45,7 @@ class GIFNERF(nn.Module):
                 (1, y.shape[2], y.shape[3], 3)).permute((0, 3, 1, 2))
 
             flowOut = flowComp(
-                pad(y.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(pow(2, ceil(log(y.shape[2], 2)))-y.shape[2]), 0, int(pow(2, ceil(log(y.shape[2], 2)))-y.shape[2])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
+                pad(y.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(pow(2, ceil(log(y.shape[2], 2)))-y.shape[2]), 0, int(pow(2, ceil(log(y.shape[3], 2)))-y.shape[3])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
             F_0_1 = flowOut[:, :2, :, :]
             F_1_0 = flowOut[:, 2:, :, :]
             #F_t_0 = -(1-co)*co * F_0_1 + co**2 * F_1_0
@@ -56,13 +56,13 @@ class GIFNERF(nn.Module):
                 y[0, ...].unsqueeze(0), F_1_0), reduction='none').mean(1, True)
         pred.requires_grad_()
         recon1 = (torch.sigmoid(alpha))*fw.softsplat(
-            y[0, ...], tenFlow=F_0_1*co, tenMetric=(-20 * tenMetric1).clip(-20, 20), strMode='soft')
+            y[0, ...], tenFlow=F_0_1*co, tenMetric=(-1 * tenMetric1).clip(-1, 1), strMode='soft')
 
         #midLoss1 = mse_loss(recon1, y[1, ...].unsqueeze(0))
 
         recon2 = (1-torch.sigmoid(alpha))*fw.softsplat(
-            y[1, ...], tenFlow=F_1_0*(1-co), tenMetric=(-20 * tenMetric2).clip(-20, 20), strMode='soft')
-        loss = mse_loss(recon1+recon2, pred)
+            y[1, ...], tenFlow=F_1_0*(1-co), tenMetric=(-1 * tenMetric2).clip(-1, 1), strMode='soft')
+        loss = ssim(recon1+recon2, pred)
         #midLoss2 = mse_loss(recon2, y[1, ...].unsqueeze(0))
         midGrad = grad(loss, pred, torch.tensor(
             1, dtype=torch.float32, device=device))[0]
