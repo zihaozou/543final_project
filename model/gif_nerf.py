@@ -43,9 +43,8 @@ class GIFNERF(nn.Module):
             del predChunk, XChunk
             pred = pred.view(
                 (1, y.shape[2], y.shape[3], 3)).permute((0, 3, 1, 2))
-
             flowOut = flowComp(
-                pad(y.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(2**int(log2(y.shape[2])+1)-y.shape[2]), 0, int(2**int(log2(y.shape[3])+1)-y.shape[3])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
+                pad(y.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(2**int(log2(y.shape[3])+1)-y.shape[3]), 0, int(2**int(log2(y.shape[2])+1)-y.shape[2])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
             F_0_1 = flowOut[:, :2, :, :]
             F_1_0 = flowOut[:, 2:, :, :]
             #F_t_0 = -(1-co)*co * F_0_1 + co**2 * F_1_0
