@@ -1,3 +1,4 @@
+from utils.ssim import MS_SSIM
 from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 from utils.save_load import save, load
@@ -63,7 +64,7 @@ def main(cfg):
                          dtype=torch.float32, device=mainDevice)
     if len(cfg.train.GPUIndex) > 1:
         model = DataParallel(model, device_ids=cfg.train.GPUIndex)
-
+    ssim = MS_SSIM(data_range=1.)
     # optimizer and scheduler
     optimizer = getattr(optim, cfg.train.optim.type)(
         [{'params': alpha}, {'params': model.parameters()}], **cfg.train.optim.kwargs)
@@ -77,7 +78,7 @@ def main(cfg):
 
     # load ckpt
     if cfg.train.ckpt is not None:
-        load(model, optimizer, scheduler, cfg.train.ckpt)
+        load(model, optimizer, scheduler, alpha, cfg.train.ckpt)
     logger.add_video('gt', torch.from_numpy(
         gt).permute((0, 3, 1, 2)).unsqueeze(0), None, fps)
     logger.add_video('trainset', torch.from_numpy(
@@ -101,42 +102,42 @@ def main(cfg):
 
         epochLoss /= len(trainLoader)
         logger.add_scalar('train/epoch loss', epochLoss, e)
-        # if e >= int(cfg.train.num_epoches*0.4):
-        if True:
+        if e >= int(cfg.train.num_epoches*0.1):
+            #if True:
             selectStep = 1./float(trainImage.shape[0])
             tIndex = 0
             for ind in np.arange(0, 1-2*selectStep, selectStep):
-                t = random.uniform(ind, ind+selectStep)
-                X = torch.from_numpy(np.asarray(list(product([t], range(
-                    H), range(W))))).float()
-                X[:, 1] /= float(H)
-                X[:, 2] /= float(W)
-                y = torch.from_numpy(
-                    trainImage[tIndex:tIndex+2, ...]).float().permute((0, 3, 1, 2))
-                batch = (X, y)
+                stratify = np.linspace(ind, ind+selectStep, 10)
+                for blInd in range(len(stratify)-1):
+                    bl = stratify[blInd]
+                    bh = stratify[blInd+1]
+                    t = random.uniform(bl, bh)
+                    X = torch.from_numpy(np.asarray(list(product([t], range(
+                        H), range(W))))).float()
+                    X[:, 1] /= float(H)
+                    X[:, 2] /= float(W)
+                    y = torch.from_numpy(
+                        trainImage[tIndex:tIndex+2, ...]).float().permute((0, 3, 1, 2))
+                    batch = (X, y)
 
-                if isinstance(model, DataParallel):
-                    midGrad1, midGrad2 = model.module.interframeTrainStep(
-                        model, flowComp, FlowBackWarp, batch, (t-ind)/selectStep, alpha, cfg.train.batch_size, mainDevice)
-                else:
-                    midGrad1, midGrad2 = model.interframeTrainStep(
-                        model, flowComp, FlowBackWarp, batch, (t-ind)/selectStep, alpha, cfg.train.batch_size, mainDevice)
-                midGrad1 = midGrad1.permute((0, 2, 3, 1)).reshape(-1, 3)
-                midGrad2 = midGrad2.permute((0, 2, 3, 1)).reshape(-1, 3)
-                #y = y.to(mainDevice).permute((0, 2, 3, 1)).reshape(-1, 3)
-                XChunk = torch.split(X, cfg.train.batch_size)
-                #yChunk = torch.split(y, cfg.train.batch_size)
-                gradChunk1 = torch.split(midGrad1, cfg.train.batch_size)
-                gradChunk2 = torch.split(midGrad2, cfg.train.batch_size)
-                optimizer.zero_grad()
-                for XPiece, gradPiece1, gradPiece2 in zip(XChunk, gradChunk1, gradChunk2):
-
-                    XPiece = XPiece.to(mainDevice)
-                    predPiece = model(XPiece)
-                    #loss = mse_loss(predPiece, yPiece, reduction='none')
-                    predPiece.backward(gradPiece1, retain_graph=True)
-                    predPiece.backward(gradPiece2)
-                optimizer.step()
+                    if isinstance(model, DataParallel):
+                        midGrad = model.module.interframeTrainStep(
+                            model, flowComp, FlowBackWarp, batch, (t-ind)/selectStep, alpha, cfg.train.batch_size, ssim, mainDevice)
+                    else:
+                        midGrad = model.interframeTrainStep(
+                            model, flowComp, FlowBackWarp, batch, (t-ind)/selectStep, alpha, cfg.train.batch_size, ssim, mainDevice)
+                    midGrad = midGrad.permute((0, 2, 3, 1)).reshape(-1, 3)
+                    #y = y.to(mainDevice).permute((0, 2, 3, 1)).reshape(-1, 3)
+                    XChunk = torch.split(X, cfg.train.batch_size)
+                    #yChunk = torch.split(y, cfg.train.batch_size)
+                    gradChunk = torch.split(midGrad, cfg.train.batch_size)
+                    optimizer.zero_grad()
+                    for XPiece, gradPiece in zip(XChunk, gradChunk):
+                        XPiece = XPiece.to(mainDevice)
+                        predPiece = model(XPiece)
+                        #loss = mse_loss(predPiece, yPiece, reduction='none')
+                        predPiece.backward(gradPiece)
+                    optimizer.step()
                 tIndex += 1
         model.eval()
         reconLst = []
@@ -170,7 +171,7 @@ def main(cfg):
             logger.add_video(
                 'val/slow motion', recon.permute((0, 3, 1, 2)).unsqueeze(0), e, fps)
         scheduler.step()
-        save(model, optimizer, scheduler, f'ckpts/epoch{e}.pt')
+        save(model, optimizer, scheduler, alpha, f'ckpts/epoch{e}.pt')
 
 
 if __name__ == '__main__':
