@@ -20,4 +20,4 @@ def load(model, optimizer, scheduler, alpha, path):
         model.load_state_dict(loadDict['model'])
     optimizer.load_state_dict(loadDict['optimizer'])
     scheduler.load_state_dict(loadDict['scheduler'])
-    alpha.data = loadDict['alpha']
+    alpha.data = loadDict['alpha'].to(alpha.device)

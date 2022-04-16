@@ -65,7 +65,7 @@ def main(cfg):
                          dtype=torch.float32, device=mainDevice)
     if len(cfg.train.GPUIndex) > 1:
         model = DataParallel(model, device_ids=cfg.train.GPUIndex)
-    ssim = MS_SSIM(data_range=1.)
+    ssim = MS_SSIM(data_range=1.).to(mainDevice)
     # optimizer and scheduler
     optimizer = getattr(optim, cfg.train.optim.type)(
         [{'params': alpha}, {'params': model.parameters()}], **cfg.train.optim.kwargs)
@@ -103,8 +103,8 @@ def main(cfg):
 
         epochLoss /= len(trainLoader)
         logger.add_scalar('train/epoch loss', epochLoss, e)
-        if e >= int(cfg.train.num_epoches*0.1):
-            #if True:
+        #if e >= int(cfg.train.num_epoches*0.1):
+        if True:
             selectStep = 1./float(trainImage.shape[0])
             tIndex = 0
             for ind in np.arange(0, 1-2*selectStep, selectStep):
