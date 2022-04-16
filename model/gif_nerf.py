@@ -65,7 +65,7 @@ class GIFNERF(nn.Module):
         loss = (torch.sigmoid(alpha))*ssim(recon1, pred)+(1-torch.sigmoid(alpha))*ssim(recon2, pred)
         #midLoss2 = mse_loss(recon2, y[1, ...].unsqueeze(0))
         midGrad = grad(loss, pred, torch.tensor(
-            1, dtype=torch.float32, device=device))[0]
+            [1], dtype=torch.float32, device=device))[0]
         return midGrad
 
     @staticmethod

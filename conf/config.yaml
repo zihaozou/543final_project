@@ -18,14 +18,14 @@ model:
     type: GIFNERF
 
 gif:
-  data_path: data/doll3.gif
+  data_path: data/test.gif
   ofargs: [0.5, 3, 15, 3, 5, 1.2, 0]
 train:
 
-  train_split: 1 
-  target_fps_factor: 5
-  batch_size: 150000
-  GPUIndex: [0]
+  train_split: 8
+  target_fps_factor: Null
+  batch_size: 200000
+  GPUIndex: [0,1]
   optim:
     type: Adam
     kwargs:
