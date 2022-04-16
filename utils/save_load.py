@@ -13,7 +13,7 @@ def save(model, optimizer, scheduler, alpha, path):
 
 
 def load(model, optimizer, scheduler, alpha, path):
-    loadDict = torch.load(path, map_location=model.device)
+    loadDict = torch.load(path, map_location='cpu')
     if isinstance(model, DataParallel):
         model.module.load_state_dict(loadDict['model'])
     else:
