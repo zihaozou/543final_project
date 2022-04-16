@@ -60,7 +60,7 @@ def main(cfg):
     flowComp.load_state_dict(torch.load(
         join(get_original_cwd(), 'data', 'SuperSloMo.ckpt'), map_location='cpu')['state_dictFC'])
     flowComp.eval()
-    FlowBackWarp = backWarp(H, W).to(mainDevice)
+    #FlowBackWarp = backWarp(H, W).to(mainDevice)
     alpha = torch.tensor([-0.1], requires_grad=True,
                          dtype=torch.float32, device=mainDevice)
     if len(cfg.train.GPUIndex) > 1:

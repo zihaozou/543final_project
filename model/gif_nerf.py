@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import grad
 from torch.autograd.functional import jacobian
-from torch.nn.functional import mse_loss, sigmoid, l1_loss, pad
+from torch.nn.functional import mse_loss, sigmoid, l1_loss, pad, cosine_similarity
 import model.softsplat as fw
 from torch.autograd import grad
 from math import ceil, log2, pow
@@ -47,21 +47,31 @@ class GIFNERF(nn.Module):
                 pad(y.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(2**int(log2(y.shape[3])+1)-y.shape[3]), 0, int(2**int(log2(y.shape[2])+1)-y.shape[2])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
             F_0_1 = flowOut[:, :2, :, :]
             F_1_0 = flowOut[:, 2:, :, :]
-            #F_t_0 = -(1-co)*co * F_0_1 + co**2 * F_1_0
-            #F_t_1 = (1-co)**2 * F_0_1 - co*(1-co) * F_1_0
-            tenMetric1 = l1_loss(input=y[0, ...].unsqueeze(0), target=backWrap(
-                y[1, ...].unsqueeze(0), F_0_1), reduction='none').mean(1, True)
-            tenMetric2 = l1_loss(input=y[1, ...].unsqueeze(0), target=backWrap(
-                y[0, ...].unsqueeze(0), F_1_0), reduction='none').mean(1, True)
+            F_t_0 = -(1-co)*co * F_0_1 + co**2 * F_1_0
+            F_t_1 = (1-co)**2 * F_0_1 - co*(1-co) * F_1_0
+            # tenMetric1 = l1_loss(input=y[0, ...].unsqueeze(0), target=backWrap(
+            #     y[1, ...].unsqueeze(0), F_0_1), reduction='none').mean(1, True)
+            # tenMetric2 = l1_loss(input=y[1, ...].unsqueeze(0), target=backWrap(
+            #     y[0, ...].unsqueeze(0), F_1_0), reduction='none').mean(1, True)
         pred.requires_grad_()
-        recon1 = co*fw.softsplat(
-            y[0, ...], tenFlow=F_0_1*co, tenMetric=(-1 * tenMetric1).clip(-1, 1), strMode='soft')
+        It_1 = torch.cat((pred, y[1, ...].unsqueeze(0)), dim=0)
+        flowOut = flowComp(
+            pad(It_1.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(2**int(log2(y.shape[3])+1)-y.shape[3]), 0, int(2**int(log2(y.shape[2])+1)-y.shape[2])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
+        F_p_1 = flowOut[:, :2, :, :]
+        It_0 = torch.cat((pred, y[0, ...].unsqueeze(0)), dim=0)
+        flowOut = flowComp(
+            pad(It_0.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(2**int(log2(y.shape[3])+1)-y.shape[3]), 0, int(2**int(log2(y.shape[2])+1)-y.shape[2])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
+        F_p_0 = flowOut[:, :2, :, :]
+        # recon1 = co*fw.softsplat(
+        #     y[0, ...], tenFlow=F_0_1*co, tenMetric=(-1 * tenMetric1).clip(-1, 1), strMode='soft')
 
-        #midLoss1 = mse_loss(recon1, y[1, ...].unsqueeze(0))
+        # #midLoss1 = mse_loss(recon1, y[1, ...].unsqueeze(0))
 
-        recon2 = (1-co)*fw.softsplat(
-            y[1, ...], tenFlow=F_1_0*(1-co), tenMetric=(-1 * tenMetric2).clip(-1, 1), strMode='soft')
-        loss = mse_loss(recon1+recon2, pred)
+        # recon2 = (1-co)*fw.softsplat(
+        #     y[1, ...], tenFlow=F_1_0*(1-co), tenMetric=(-1 * tenMetric2).clip(-1, 1), strMode='soft')
+
+        loss = torch.mean((1-cosine_similarity(F_t_0, F_p_0)) +
+                          (1-cosine_similarity(F_t_1, F_p_1)), dim=[0, 1, 2])
         #midLoss2 = mse_loss(recon2, y[1, ...].unsqueeze(0))
         midGrad = grad(loss, pred, torch.tensor(
             1, dtype=torch.float32, device=device))[0]

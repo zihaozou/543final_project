@@ -18,13 +18,13 @@ model:
     type: GIFNERF
 
 gif:
-  data_path: data/bob.gif
+  data_path: data/rocket.gif
   ofargs: [0.5, 3, 15, 3, 5, 1.2, 0]
 train:
-  stra_size: 3
+  stra_size: 5
   train_split: 1
   target_fps_factor: 5
-  batch_size: 200000
+  batch_size: 150000
   GPUIndex: [0]
   optim:
     type: Adam
@@ -36,4 +36,4 @@ train:
     kwargs:
       gamma: 0.999
   ckpt: Null
-  num_epoches: 300
+  num_epoches: 200
