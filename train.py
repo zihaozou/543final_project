@@ -108,7 +108,8 @@ def main(cfg):
             selectStep = 1./float(trainImage.shape[0])
             tIndex = 0
             for ind in np.arange(0, 1-2*selectStep, selectStep):
-                stratify = np.linspace(ind, ind+selectStep, 10)
+                stratify = np.linspace(
+                    ind, ind+selectStep, cfg.train.stra_size)
                 for blInd in range(len(stratify)-1):
                     bl = stratify[blInd]
                     bh = stratify[blInd+1]
