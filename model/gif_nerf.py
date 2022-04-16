@@ -5,7 +5,7 @@ from torch.autograd.functional import jacobian
 from torch.nn.functional import mse_loss, sigmoid, l1_loss, pad
 import model.softsplat as fw
 from torch.autograd import grad
-from math import ceil, log, pow
+from math import ceil, log2, pow
 
 
 class GIFNERF(nn.Module):
@@ -45,7 +45,7 @@ class GIFNERF(nn.Module):
                 (1, y.shape[2], y.shape[3], 3)).permute((0, 3, 1, 2))
 
             flowOut = flowComp(
-                pad(y.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(pow(2, ceil(log(y.shape[2], 2)))-y.shape[2]), 0, int(pow(2, ceil(log(y.shape[3], 2)))-y.shape[3])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
+                pad(y.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(2**int(log2(y.shape[2])+1)-y.shape[2]), 0, int(2**int(log2(y.shape[3])+1)-y.shape[3])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
             F_0_1 = flowOut[:, :2, :, :]
             F_1_0 = flowOut[:, 2:, :, :]
             #F_t_0 = -(1-co)*co * F_0_1 + co**2 * F_1_0
