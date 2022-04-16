@@ -35,5 +35,5 @@ train:
     type: ExponentialLR
     kwargs:
       gamma: 0.999
-  ckpt: Null
+  ckpt: /home/zihao/Desktop/workspace/outputs/2022-04-15-20-31-37/ckpts/epoch29.pt
   num_epoches: 300
