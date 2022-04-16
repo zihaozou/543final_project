@@ -55,17 +55,17 @@ class GIFNERF(nn.Module):
             tenMetric2 = l1_loss(input=y[1, ...].unsqueeze(0), target=backWrap(
                 y[0, ...].unsqueeze(0), F_1_0), reduction='none').mean(1, True)
         pred.requires_grad_()
-        recon1 = fw.softsplat(
-            pred, tenFlow=F_0_1*co, tenMetric=((torch.sigmoid(alpha)) * tenMetric1), strMode='soft')
+        recon1 = (torch.sigmoid(alpha))*fw.softsplat(
+            y[0, ...], tenFlow=F_0_1*co, tenMetric=(-20 * tenMetric1).clip(-20, 20), strMode='soft')
 
         #midLoss1 = mse_loss(recon1, y[1, ...].unsqueeze(0))
 
-        recon2 = fw.softsplat(
-            pred, tenFlow=F_1_0*(1-co), tenMetric=((1-torch.sigmoid(alpha)) * tenMetric2), strMode='soft')
-        loss = ssim(recon1, pred)+ssim(recon2, pred)
+        recon2 = (1-torch.sigmoid(alpha))*fw.softsplat(
+            y[1, ...], tenFlow=F_1_0*(1-co), tenMetric=(-20 * tenMetric2).clip(-20, 20), strMode='soft')
+        loss = mse_loss(recon1+recon2, pred)
         #midLoss2 = mse_loss(recon2, y[1, ...].unsqueeze(0))
         midGrad = grad(loss, pred, torch.tensor(
-            [1], dtype=torch.float32, device=device))[0]
+            1, dtype=torch.float32, device=device))[0]
         return midGrad
 
     @staticmethod
