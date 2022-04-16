@@ -4,10 +4,10 @@ hydra:
 model:
   ffm:
     mode: linear
-    L: 10
+    L: 5
     num_input: 3
   mlp:
-    num_inputs: 60
+    num_inputs: 30
     num_outputs: 3
     num_neurons: 256
     depth: 8
@@ -25,7 +25,7 @@ train:
   train_split: 8
   target_fps_factor: Null
   batch_size: 200000
-  GPUIndex: [0,1]
+  GPUIndex: [2]
   optim:
     type: Adam
     kwargs:
@@ -35,5 +35,5 @@ train:
     type: ExponentialLR
     kwargs:
       gamma: 0.999
-  ckpt: /home/zihao/Desktop/workspace/outputs/2022-04-15-20-31-37/ckpts/epoch29.pt
+  ckpt: Null # /home/zihao/Desktop/workspace/outputs/2022-04-15-20-31-37/ckpts/epoch29.pt
   num_epoches: 300

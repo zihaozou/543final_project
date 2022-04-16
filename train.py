@@ -25,6 +25,7 @@ import numpy as np
 from itertools import product
 import torch.nn as nn
 from torch.nn.functional import mse_loss
+#from model.gridencoder.grid import GridEncoder
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 
 
