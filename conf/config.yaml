@@ -4,14 +4,14 @@ hydra:
 model:
   ffm:
     mode: linear
-    L: 15
+    L: 10
     num_input: 3
   mlp:
-    num_inputs: 90
+    num_inputs: 60
     num_outputs: 3
-    num_neurons: 256
+    num_neurons: 328
     depth: 16
-    skip_list: [2,5,8,11,14]
+    skip_list: [2,5,8]
     body_acti: LeakyReLU
     last_acti: Null
   nerf:
@@ -21,8 +21,8 @@ gif:
   data_path: data/test.gif
   ofargs: [0.5, 3, 15, 3, 5, 1.2, 0]
 train:
-  train_split: 3
-  batch_size: 100000
+  train_split: 5
+  batch_size: 200000
   GPUIndex: [2]
   optim:
     type: Adam
@@ -34,4 +34,4 @@ train:
     kwargs:
       gamma: 0.999
   ckpt: Null
-  num_epoches: 300
+  num_epoches: 200
