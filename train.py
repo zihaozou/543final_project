@@ -87,6 +87,7 @@ def main(cfg):
         reconLst = []
         for b, batch in enumerate(valLoader):
             # eval
+            batch=batch[0]
             if isinstance(model, DataParallel):
                 pred = model.module.valStep(model, batch, mainDevice)
             else:

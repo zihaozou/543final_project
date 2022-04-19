@@ -20,3 +20,11 @@ def load(model, optimizer, scheduler, path):
         model.load_state_dict(loadDict['model'])
     optimizer.load_state_dict(loadDict['optimizer'])
     scheduler.load_state_dict(loadDict['scheduler'])
+
+
+def load_model_only(model, path):
+    loadDict = torch.load(path, map_location='cpu')
+    if isinstance(model, DataParallel):
+        model.module.load_state_dict(loadDict['model'])
+    else:
+        model.load_state_dict(loadDict['model'])
