@@ -60,7 +60,7 @@ def main(cfg):
     flowComp.load_state_dict(torch.load(
         join(get_original_cwd(), 'data', 'SuperSloMo.ckpt'), map_location='cpu')['state_dictFC'])
     flowComp.eval()
-    #FlowBackWarp = backWarp(H, W).to(mainDevice)
+    FlowBackWarp = backWarp(H, W).to(mainDevice)
     alpha = torch.tensor([-0.1], requires_grad=True,
                          dtype=torch.float32, device=mainDevice)
     if len(cfg.train.GPUIndex) > 1:
@@ -71,7 +71,8 @@ def main(cfg):
         [{'params': alpha}, {'params': model.parameters()}], **cfg.train.optim.kwargs)
     scheduler = getattr(lr_scheduler, cfg.train.lr_sche.type)(optimizer,
                                                               **cfg.train.lr_sche.kwargs)
-
+    optimizer2=getattr(optim, cfg.train.optim.type)(
+        [{'params': alpha}, {'params': model.parameters()}], lr=1e-5,weight_decay=1e-8)
     # logger
     mkdir('logs')
     mkdir('ckpts')
@@ -103,8 +104,8 @@ def main(cfg):
 
         epochLoss /= len(trainLoader)
         logger.add_scalar('train/epoch loss', epochLoss, e)
-        #if e >= int(cfg.train.num_epoches*0.1):
-        if True:
+        if e >= int(cfg.train.num_epoches*0.1):
+        #if True:
             selectStep = 1./float(trainImage.shape[0])
             tIndex = 0
             for ind in np.arange(0, 1-2*selectStep, selectStep):
@@ -133,13 +134,13 @@ def main(cfg):
                     XChunk = torch.split(X, cfg.train.batch_size)
                     #yChunk = torch.split(y, cfg.train.batch_size)
                     gradChunk = torch.split(midGrad, cfg.train.batch_size)
-                    optimizer.zero_grad()
+                    optimizer2.zero_grad()
                     for XPiece, gradPiece in zip(XChunk, gradChunk):
                         XPiece = XPiece.to(mainDevice)
                         predPiece = model(XPiece)
                         #loss = mse_loss(predPiece, yPiece, reduction='none')
                         predPiece.backward(gradPiece)
-                    optimizer.step()
+                    optimizer2.step()
                 tIndex += 1
         model.eval()
         reconLst = []

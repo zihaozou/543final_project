@@ -49,6 +49,8 @@ class GIFNERF(nn.Module):
             F_1_0 = flowOut[:, 2:, :, :]
             F_t_0 = -(1-co)*co * F_0_1 + co**2 * F_1_0
             F_t_1 = (1-co)**2 * F_0_1 - co*(1-co) * F_1_0
+            ItFrom0=backWrap(y[0, ...].unsqueeze(0), F_t_0)
+            ItFrom1=backWrap(y[1, ...].unsqueeze(0), F_t_1)
             # tenMetric1 = l1_loss(input=y[0, ...].unsqueeze(0), target=backWrap(
             #     y[1, ...].unsqueeze(0), F_0_1), reduction='none').mean(1, True)
             # tenMetric2 = l1_loss(input=y[1, ...].unsqueeze(0), target=backWrap(
@@ -62,6 +64,7 @@ class GIFNERF(nn.Module):
         flowOut = flowComp(
             pad(It_0.reshape((1, 6, y.shape[2], y.shape[3])), (0, int(2**int(log2(y.shape[3])+1)-y.shape[3]), 0, int(2**int(log2(y.shape[2])+1)-y.shape[2])), mode='constant'))[:, :, :y.shape[2], :y.shape[3]]
         F_p_0 = flowOut[:, :2, :, :]
+        
         # recon1 = co*fw.softsplat(
         #     y[0, ...], tenFlow=F_0_1*co, tenMetric=(-1 * tenMetric1).clip(-1, 1), strMode='soft')
 
@@ -70,8 +73,8 @@ class GIFNERF(nn.Module):
         # recon2 = (1-co)*fw.softsplat(
         #     y[1, ...], tenFlow=F_1_0*(1-co), tenMetric=(-1 * tenMetric2).clip(-1, 1), strMode='soft')
 
-        loss = torch.mean((1-cosine_similarity(F_t_0, F_p_0)) +
-                          (1-cosine_similarity(F_t_1, F_p_1)), dim=[0, 1, 2])
+        loss = torch.mean((1-co)*(1-cosine_similarity(F_t_0, F_p_0)) +co*
+                          (1-cosine_similarity(F_t_1, F_p_1)), dim=[0, 1, 2])+(1-co)*mse_loss(pred,ItFrom0)+co*mse_loss(pred,ItFrom1)
         #midLoss2 = mse_loss(recon2, y[1, ...].unsqueeze(0))
         midGrad = grad(loss, pred, torch.tensor(
             1, dtype=torch.float32, device=device))[0]

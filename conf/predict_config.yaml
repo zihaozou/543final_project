@@ -2,7 +2,8 @@ hydra:
   run:
     dir: ../predicts/${now:%Y-%m-%d-%H-%M-%S}
 model:
-  path: C:\Users\49056\Desktop\outputs\2022-04-12-23-28-37\ckpts\epoch299.pt
+  
+  path: /export1/project/zihao/outputs/2022-04-16-14-21-43/ckpts/epoch197.pt
   ffm:
     mode: linear
     L: 10
@@ -20,8 +21,9 @@ model:
   batch_size: 8000
   GPUIndex: [0]
 gif:
-  data_path: data/test.gif
+  data_path: data/rocket.gif
   ofargs: [0.5, 3, 15, 3, 5, 1.2, 0]
   split: 3
-
+  name: 'rocket_slow_mo'
+  slowmo_factor: 10
 
