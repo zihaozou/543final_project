@@ -16,7 +16,9 @@ Other software:
     
 
 # RUN：
-    TO run training, change the image path under conf/config.yaml
+To run training, change the image path under conf/config.yaml
     
-    To run prediction, change the model path and image path in the conf/predict_config.ymal
+To run prediction, change the model path and image path in the conf/predict_config.ymal
+
+Detail config information is in the config file under conf.
     
