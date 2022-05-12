@@ -22,3 +22,4 @@ To run prediction, change the model path and image path in the conf/predict_conf
 
 Detail config information is in the config file under conf.
     
+outputs is located at ../outputs
