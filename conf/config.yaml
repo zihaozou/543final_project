@@ -3,25 +3,25 @@ hydra:
     dir: ../outputs/${now:%Y-%m-%d-%H-%M-%S}
 model:
   ffm:
-    mode: linear
-    L: 10
-    num_input: 3
+    mode: linear #"loglinear" to use loglinear ffm
+    L: 10 #hyperparameter controlling the number of frequency
+    num_input: 3 #number of input
   mlp:
-    num_inputs: 60
-    num_outputs: 3
-    num_neurons: 328
-    depth: 16
-    skip_list: [2,5,8]
+    num_inputs: 60 #number of input for mlp usually "num_input*2*L"
+    num_outputs: 3 #number of output(RGB)
+    num_neurons: 256 #number of neurons
+    depth: 8 #depth of mlp
+    skip_list: [2,5] #skip layers
     body_acti: LeakyReLU
-    last_acti: Null
+    last_acti: Null # can be Sigmoid
   nerf:
     type: GIFNERF
 
 gif:
-  data_path: data/test.gif
-  ofargs: [0.5, 3, 15, 3, 5, 1.2, 0]
+  data_path: data/test.gif # the image path
+  ofargs: [0.5, 3, 15, 3, 5, 1.2, 0] #dont change
 train:
-  train_split: 5
+  train_split: 5 #pick one frame every "train_split" frame
   batch_size: 200000
   GPUIndex: [2]
   optim:
@@ -34,4 +34,4 @@ train:
     kwargs:
       gamma: 0.999
   ckpt: Null
-  num_epoches: 200
+  num_epoches: 200 #number of epoches
